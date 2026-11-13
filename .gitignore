@@ -15,3 +15,8 @@ __pycache__/
 **/jomz_export.csv
 **/backups/
 **/recovery_before_restore/
+
+# Android build output
+.buildozer/
+android_app/.buildozer/
+android_app/bin/
