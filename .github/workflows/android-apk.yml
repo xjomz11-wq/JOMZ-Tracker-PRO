@@ -49,7 +49,25 @@ jobs:
 
       - name: Build debug APK
         working-directory: android_app
-        run: yes | buildozer android debug
+        shell: bash
+        run: |
+          set +e
+          yes | buildozer android debug 2>&1 | tee build.log
+          build_status=${PIPESTATUS[1]}
+          if [ "$build_status" -ne 0 ]; then
+            echo "===== LAST 120 BUILD LOG LINES ====="
+            tail -n 120 build.log
+          fi
+          exit "$build_status"
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JOMZ-Tracker-PRO-build-log
+          path: android_app/build.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
