@@ -6,6 +6,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.uix.spinner import Spinner
 from kivy.utils import get_color_from_hex
+from kivy.graphics import Color, RoundedRectangle
 
 PURPLE = "#8B5CF6"
 WHITE = "#FFFFFF"
@@ -135,20 +136,23 @@ class TrackerScreens:
             BoxLayout(size_hint_y=1)
         )
 
+
     def show_home(self):
         self.accounts = self.storage.load_accounts()
         self.root_layout.clear_widgets()
 
-        # App header
-        title = self.label("JOMZ TRACKER PRO", 26, PURPLE)
-        title.size_hint_y = None
-        title.height = 44
-        self.root_layout.add_widget(title)
-
-        subtitle = self.label("PREMIUM ACCOUNT MANAGER", 12, MUTED)
-        subtitle.size_hint_y = None
-        subtitle.height = 26
-        self.root_layout.add_widget(subtitle)
+        # Premium header
+        header = BoxLayout(
+            orientation="vertical",
+            size_hint_y=None,
+            height=78,
+            spacing=3
+        )
+        title = self.label("JOMZ TRACKER PRO", 25, "#A78BFA")
+        subtitle = self.label("PREMIUM ACCOUNT MANAGER", 11, "#9CA3AF")
+        header.add_widget(title)
+        header.add_widget(subtitle)
+        self.root_layout.add_widget(header)
 
         # Account statistics
         counts = {}
@@ -156,48 +160,80 @@ class TrackerScreens:
             status = item.get("status", "Pending")
             counts[status] = counts.get(status, 0) + 1
 
-        dashboard = GridLayout(
+        def make_card(heading, value, accent):
+            card = BoxLayout(
+                orientation="vertical",
+                padding=10,
+                spacing=4
+            )
+
+            with card.canvas.before:
+                Color(*get_color_from_hex("#211B38"))
+                bg = RoundedRectangle(
+                    pos=card.pos,
+                    size=card.size,
+                    radius=[14]
+                )
+
+            card.bind(
+                pos=lambda obj, pos: setattr(bg, "pos", pos),
+                size=lambda obj, size: setattr(bg, "size", size)
+            )
+
+            card.add_widget(self.label(heading, 12, "#AAA2C8"))
+            card.add_widget(self.label(value, 27, accent))
+            return card
+
+        stats = GridLayout(
             cols=2,
             spacing=10,
             size_hint_y=None,
-            height=160,
-            row_default_height=75,
+            height=174,
+            row_default_height=82,
             row_force_default=True
         )
 
-        for card_title, value in [
-            ("TOTAL", len(self.accounts)),
-            ("PENDING", counts.get("Pending", 0)),
-            ("BOUND", counts.get("Bound", 0)),
-            ("VERIFIED", counts.get("Verified", 0))
-        ]:
-            card = BoxLayout(orientation="vertical", padding=8)
-            heading = self.label(card_title, 12, MUTED)
-            heading.size_hint_y = 1
-            number = self.label(value, 25, PURPLE)
-            number.size_hint_y = 1
-            card.add_widget(heading)
-            card.add_widget(number)
-            dashboard.add_widget(card)
+        stats.add_widget(make_card("TOTAL ACCOUNTS", len(self.accounts), "#A78BFA"))
+        stats.add_widget(make_card("PENDING", counts.get("Pending", 0), "#FBBF24"))
+        stats.add_widget(make_card("BOUND", counts.get("Bound", 0), "#38BDF8"))
+        stats.add_widget(make_card("VERIFIED", counts.get("Verified", 0), "#34D399"))
 
-        self.root_layout.add_widget(dashboard)
+        self.root_layout.add_widget(stats)
 
-        # Main actions
+        section = self.label("QUICK ACTIONS", 15, "#C4B5FD")
+        section.size_hint_y = None
+        section.height = 30
+        self.root_layout.add_widget(section)
+
+        # Two-column premium action grid
+        actions = GridLayout(
+            cols=2,
+            spacing=10,
+            size_hint_y=None,
+            height=244,
+            row_default_height=56,
+            row_force_default=True
+        )
+
         buttons = [
-            ("[+]  ADD ENTRY", self.add_entry),
-            ("[LIST]  VIEW ENTRIES", self.view_entries),
-            ("[FIND]  SEARCH", self.search_entry),
-            ("[EDIT]  UPDATE STATUS", self.update_entry),
-            ("[DEL]  DELETE ENTRY", self.delete_entry),
-            ("[CSV]  EXPORT CSV", self.export_csv),
-            ("[LOG]  ACTIVITY HISTORY", self.activity_history),
-            ("[LOCK]  LOCK APP", lambda x: self.show_pin())
+            ("ADD ENTRY", self.add_entry, "#7048D8"),
+            ("VIEW ENTRIES", self.view_entries, "#3659B8"),
+            ("SEARCH", self.search_entry, "#3659B8"),
+            ("UPDATE STATUS", self.update_entry, "#7048D8"),
+            ("DELETE ENTRY", self.delete_entry, "#873D67"),
+            ("EXPORT CSV", self.export_csv, "#3659B8"),
+            ("ACTIVITY HISTORY", self.activity_history, "#7048D8"),
+            ("LOCK APP", lambda x: self.show_pin(), "#493A70")
         ]
 
-        for button_title, callback in buttons:
-            self.root_layout.add_widget(
-                self.button(button_title, callback)
-            )
+        for text, callback, color in buttons:
+            btn = self.button(text, callback)
+            btn.height = 56
+            btn.font_size = 12
+            btn.background_color = get_color_from_hex(color)
+            actions.add_widget(btn)
+
+        self.root_layout.add_widget(actions)
 
     def add_entry(self, btn=None):
         self.page("ADD NEW ENTRY")
