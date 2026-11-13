@@ -1,0 +1,17 @@
+jomz_accounts.json
+pin_config.json
+jomz_activity.log
+jomz_export.csv
+backups/
+*.backup
+*.bak
+__pycache__/
+*.pyc
+
+# JOMZ PRIVATE DATA - NEVER UPLOAD
+**/jomz_accounts.json
+**/pin_config.json
+**/jomz_activity.log
+**/jomz_export.csv
+**/backups/
+**/recovery_before_restore/
