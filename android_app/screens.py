@@ -67,17 +67,38 @@ class TrackerScreens:
         )
 
     def show_pin(self):
-        self.page("JOMZ TRACKER PRO")
+        self.root_layout.clear_widgets()
+
+        # Flexible top space
         self.root_layout.add_widget(
-            self.label("SECURE LOCAL APP", 12, MUTED)
+            BoxLayout(size_hint_y=1)
         )
 
+        # Centered PIN panel
+        panel = BoxLayout(
+            orientation="vertical",
+            size_hint=(1, None),
+            height=320,
+            spacing=12,
+            padding=[12, 12, 12, 12]
+        )
+
+        title = self.label("JOMZ TRACKER PRO", 28, PURPLE)
+        title.size_hint_y = None
+        title.height = 42
+        panel.add_widget(title)
+
+        subtitle = self.label("SECURE LOCAL APP", 12, MUTED)
+        subtitle.size_hint_y = None
+        subtitle.height = 24
+        panel.add_widget(subtitle)
+
         pin = self.field("Enter 4–8 digit PIN", True)
-        self.root_layout.add_widget(pin)
+        panel.add_widget(pin)
 
         if not self.storage.has_pin():
             confirm = self.field("Confirm PIN", True)
-            self.root_layout.add_widget(confirm)
+            panel.add_widget(confirm)
 
             def create(btn):
                 if pin.text != confirm.text:
@@ -93,7 +114,7 @@ class TrackerScreens:
                 )
                 self.show_home()
 
-            self.root_layout.add_widget(
+            panel.add_widget(
                 self.button("CREATE PIN", create)
             )
         else:
@@ -103,18 +124,33 @@ class TrackerScreens:
                 else:
                     self.message("ACCESS DENIED", "Incorrect PIN.")
 
-            self.root_layout.add_widget(
+            panel.add_widget(
                 self.button("UNLOCK APP", login)
             )
 
-    def show_home(self):
-        self.accounts = self.storage.load_accounts()
-        self.page("JOMZ TRACKER PRO")
+        self.root_layout.add_widget(panel)
 
+        # Flexible bottom space
         self.root_layout.add_widget(
-            self.label("PREMIUM ACCOUNT MANAGER", 12, MUTED)
+            BoxLayout(size_hint_y=1)
         )
 
+    def show_home(self):
+        self.accounts = self.storage.load_accounts()
+        self.root_layout.clear_widgets()
+
+        # App header
+        title = self.label("JOMZ TRACKER PRO", 26, PURPLE)
+        title.size_hint_y = None
+        title.height = 44
+        self.root_layout.add_widget(title)
+
+        subtitle = self.label("PREMIUM ACCOUNT MANAGER", 12, MUTED)
+        subtitle.size_hint_y = None
+        subtitle.height = 26
+        self.root_layout.add_widget(subtitle)
+
+        # Account statistics
         counts = {}
         for item in self.accounts:
             status = item.get("status", "Pending")
@@ -122,40 +158,46 @@ class TrackerScreens:
 
         dashboard = GridLayout(
             cols=2,
-            spacing=8,
+            spacing=10,
             size_hint_y=None,
-            height=125
+            height=160,
+            row_default_height=75,
+            row_force_default=True
         )
 
-        for title, value in [
+        for card_title, value in [
             ("TOTAL", len(self.accounts)),
             ("PENDING", counts.get("Pending", 0)),
             ("BOUND", counts.get("Bound", 0)),
             ("VERIFIED", counts.get("Verified", 0))
         ]:
-            card = BoxLayout(orientation="vertical")
-            card.add_widget(self.label(title, 12, MUTED))
-            card.add_widget(self.label(value, 24, PURPLE))
+            card = BoxLayout(orientation="vertical", padding=8)
+            heading = self.label(card_title, 12, MUTED)
+            heading.size_hint_y = 1
+            number = self.label(value, 25, PURPLE)
+            number.size_hint_y = 1
+            card.add_widget(heading)
+            card.add_widget(number)
             dashboard.add_widget(card)
 
         self.root_layout.add_widget(dashboard)
 
+        # Main actions
         buttons = [
-            ("＋ ADD ENTRY", self.add_entry),
-            ("▤ VIEW ENTRIES", self.view_entries),
-            ("⌕ SEARCH", self.search_entry),
-            ("↻ UPDATE STATUS", self.update_entry),
-            ("✕ DELETE ENTRY", self.delete_entry),
-            ("⇩ EXPORT CSV", self.export_csv),
-            ("◷ ACTIVITY HISTORY", self.activity_history),
-            ("🔒 LOCK APP", lambda x: self.show_pin())
+            ("[+]  ADD ENTRY", self.add_entry),
+            ("[LIST]  VIEW ENTRIES", self.view_entries),
+            ("[FIND]  SEARCH", self.search_entry),
+            ("[EDIT]  UPDATE STATUS", self.update_entry),
+            ("[DEL]  DELETE ENTRY", self.delete_entry),
+            ("[CSV]  EXPORT CSV", self.export_csv),
+            ("[LOG]  ACTIVITY HISTORY", self.activity_history),
+            ("[LOCK]  LOCK APP", lambda x: self.show_pin())
         ]
 
-        for title, callback in buttons:
+        for button_title, callback in buttons:
             self.root_layout.add_widget(
-                self.button(title, callback)
+                self.button(button_title, callback)
             )
-
 
     def add_entry(self, btn=None):
         self.page("ADD NEW ENTRY")

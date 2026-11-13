@@ -23,6 +23,7 @@ class JomzTracker(App, TrackerScreens):
             do_scroll_x=False,
             do_scroll_y=True
         )
+        self.scroll = scroll
 
         self.root_layout = BoxLayout(
             orientation="vertical",
@@ -31,9 +32,15 @@ class JomzTracker(App, TrackerScreens):
             size_hint_y=None
         )
 
-        self.root_layout.bind(
-            minimum_height=self.root_layout.setter("height")
-        )
+        # Fill the screen when content is shorter than viewport.
+        def fit_content(*args):
+            self.root_layout.height = max(
+                self.scroll.height,
+                self.root_layout.minimum_height
+            )
+
+        self.root_layout.bind(minimum_height=fit_content)
+        scroll.bind(size=fit_content)
 
         scroll.add_widget(self.root_layout)
 
